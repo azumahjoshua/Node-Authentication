@@ -1,17 +1,16 @@
-const express = require("express")
+const express = require("express");
 const app = express();
-const dotenv = require('dotenv')
-const mongoose = require("mongoose")
-const authRouth = require("./routes/auth")
+const dotenv = require('dotenv');
+const mongoose = require("mongoose");
+const authRoute = require("./routes/auth"); // Corrected variable name
 
 dotenv.config();
 
-// connect to DB
-mongoose.connect(process.env.DB_CONNECT)
+// Connect to DB
+mongoose.connect(process.env.DB_CONNECT) 
+app.use(express.json());
 
-app.use(express.json())
-
-app.use("/api/user",authRouth)
-app.listen(5000,()=>console.log("Server Up and running"))
+app.use("/api/user", authRoute); // Corrected route variable name
+app.listen(5000, () => console.log("Server Up and running"));
 
 // GDNjrR2QcoAZvhM9

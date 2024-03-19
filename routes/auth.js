@@ -1,41 +1,53 @@
 const router = require("express").Router();
 const User = require("../model/User");
+const bcrypt = require("bcryptjs")
 const { registerValidation,loginValidation} = require('../validation')
-// Validation 
-const joi = require("joi");
 
-const schema = {
-    name: joi.string().min(6).required(),
-    email: joi.string().min(6).required().email(),
-    password: joi.string().min(6).required()
-};
 
 router.post('/register', async (req, res) => {
     try {
         // Validate the data before a a new user is created
-        const { error } = registerValidation(req.body)
-        if (error) return res.status(400).send(error.details[0].message);
+        // const { error } = registerValidation(req.body)
+        // if (error) return res.status(400).send(error.details[0].message);
 
         const { name, email, password } = req.body;
 
         // Check if a the user already exist 
-        const userexist = await User.findOne({email})
-        if(userexist) return res.status(400).send("User already exists")
+        const userExist = await User.findOne({email})
+        if(userExist) return res.status(400).send("User already exists")
+
+        // Hash Password
+        
+        const salt = await bcrypt.genSalt(10)
+        const hashedPassword = await bcrypt.hash(password,salt)
         // Create a new user
         const user = new User({
             name: name,
             email: email,
-            password: password
+            password: hashedPassword
         });
 
         const newUser = await user.save();
-        res.status(201).send(newUser);
+        res.status(201).send({user:user._id});
     } catch (error) {
         res.status(400).send(error);
     }
 });
 
-router.post("/login", (req, res) => {
+router.post("/login", async(req, res) => {
+    try {
+        const {email,password} = req.body
+        // Check if a the user already exist 
+        const user = await User.findOne({email})
+        if(!user) return res.status(400).send("Email or password is incorrect")
+        
+        // Check if the password id correct
+        const isMatchPasswod = await bcrypt.compare(password,user.password)
+        if(!isMatchPasswod) return res.status(400).send("Email or password is incorrect")
+        res.send("Logged in successfully")
+    } catch (error) {
+        res.status(400).send(error)
+    }
     res.send("Login");
 });
 
